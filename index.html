@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ระบบเบิกจ่ายพัสดุ</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f3f4f6;
+      color: #222;
+    }
+
+    .header {
+      background: #166534;
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .header h1 {
+      margin: 0;
+      font-size: 24px;
+    }
+
+    .header p {
+      margin: 8px 0 0;
+      font-size: 14px;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: auto;
+      padding: 20px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 16px;
+      box-shadow: 0 3px 12px rgba(0,0,0,0.08);
+    }
+
+    label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: bold;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 14px;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      font-size: 16px;
+      margin-bottom: 14px;
+    }
+
+    button {
+      width: 100%;
+      border: none;
+      border-radius: 10px;
+      padding: 14px;
+      font-size: 17px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 8px;
+    }
+
+    .scan-btn {
+      background: #2563eb;
+      color: white;
+    }
+
+    .withdraw-btn {
+      background: #dc2626;
+      color: white;
+    }
+
+    .receive-btn {
+      background: #16a34a;
+      color: white;
+    }
+
+    .stock {
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      border-radius: 12px;
+      padding: 15px;
+      text-align: center;
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    .footer {
+      text-align: center;
+      color: #777;
+      font-size: 13px;
+      padding: 20px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="header">
+    <h1>📦 ระบบเบิกจ่ายพัสดุ</h1>
+    <p>สแกนบาร์โค้ดเพื่อรับเข้าและเบิกจ่าย</p>
+  </div>
+
+  <div class="container">
+
+    <div class="card">
+
+      <label>บาร์โค้ดสินค้า</label>
+
+      <input
+        type="text"
+        id="barcode"
+        placeholder="สแกนหรือกรอกบาร์โค้ด"
+      >
+
+      <button class="scan-btn" onclick="scanBarcode()">
+        📷 สแกนบาร์โค้ด
+      </button>
+
+    </div>
+
+    <div class="card">
+
+      <label>ชื่อสินค้า</label>
+
+      <input
+        type="text"
+        id="product"
+        placeholder="เช่น ยาสระผม / สบู่"
+      >
+
+      <label>จำนวน</label>
+
+      <input
+        type="number"
+        id="quantity"
+        value="1"
+        min="1"
+      >
+
+      <label>ประเภทการทำรายการ</label>
+
+      <select id="type">
+        <option value="withdraw">เบิกจ่าย</option>
+        <option value="receive">รับเข้า</option>
+      </select>
+
+      <button class="withdraw-btn" onclick="saveTransaction()">
+        ➖ บันทึกเบิกจ่าย
+      </button>
+
+      <button class="receive-btn" onclick="receiveProduct()">
+        ➕ บันทึกรับเข้า
+      </button>
+
+    </div>
+
+    <div class="card">
+
+      <div class="stock">
+        📊 สินค้าคงเหลือ<br>
+        <span id="stock">0</span> ชิ้น
+      </div>
+
+    </div>
+
+  </div>
+
+  <div class="footer">
+    ระบบจัดการพัสดุออนไลน์
+  </div>
+
+
+  <script>
+
+    function scanBarcode() {
+
+      alert(
+        "ขั้นตอนถัดไปเราจะเพิ่มระบบเปิดกล้องมือถือเพื่อสแกนบาร์โค้ดตรงนี้ครับ 📷"
+      );
+
+    }
+
+
+    function saveTransaction() {
+
+      const barcode =
+        document.getElementById("barcode").value;
+
+      const product =
+        document.getElementById("product").value;
+
+      const quantity =
+        document.getElementById("quantity").value;
+
+      if (!barcode || !product || !quantity) {
+
+        alert("กรุณากรอกข้อมูลให้ครบ");
+
+        return;
+      }
+
+      alert(
+        "บันทึกการเบิกจ่ายแล้ว\n\n" +
+        "สินค้า: " + product +
+        "\nจำนวน: " + quantity
+      );
+
+    }
+
+
+    function receiveProduct() {
+
+      const barcode =
+        document.getElementById("barcode").value;
+
+      const product =
+        document.getElementById("product").value;
+
+      const quantity =
+        document.getElementById("quantity").value;
+
+      if (!barcode || !product || !quantity) {
+
+        alert("กรุณากรอกข้อมูลให้ครบ");
+
+        return;
+      }
+
+      alert(
+        "บันทึกรับเข้าแล้ว\n\n" +
+        "สินค้า: " + product +
+        "\nจำนวน: " + quantity
+      );
+
+    }
+
+  </script>
+
+</body>
+</html>
