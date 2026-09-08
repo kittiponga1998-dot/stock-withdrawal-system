@@ -3,7 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <title>ระบบเบิกจ่ายพัสดุ</title>
+
+  <!-- ระบบอ่านบาร์โค้ดจากกล้อง -->
+  <script src="https://unpkg.com/html5-qrcode"></script>
 
   <style>
     * {
@@ -26,7 +30,7 @@
 
     .header h1 {
       margin: 0;
-      font-size: 24px;
+      font-size: 25px;
     }
 
     .header p {
@@ -50,11 +54,12 @@
 
     label {
       display: block;
-      margin-bottom: 6px;
+      margin-bottom: 7px;
       font-weight: bold;
     }
 
-    input, select {
+    input,
+    select {
       width: 100%;
       padding: 14px;
       border: 1px solid #ddd;
@@ -105,6 +110,55 @@
       font-size: 13px;
       padding: 20px;
     }
+
+    /* หน้าต่างสแกน */
+    .scanner-modal {
+      display: none;
+      position: fixed;
+      z-index: 9999;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.9);
+      padding: 20px;
+    }
+
+    .scanner-box {
+      max-width: 500px;
+      margin: 40px auto;
+      background: white;
+      border-radius: 16px;
+      padding: 15px;
+    }
+
+    .scanner-title {
+      text-align: center;
+      font-size: 20px;
+      font-weight: bold;
+      margin-bottom: 15px;
+    }
+
+    #reader {
+      width: 100%;
+    }
+
+    .close-btn {
+      background: #dc2626;
+      color: white;
+      margin-top: 15px;
+    }
+
+    .result {
+      display: none;
+      background: #dcfce7;
+      color: #166534;
+      padding: 12px;
+      border-radius: 10px;
+      margin-top: 10px;
+      text-align: center;
+      font-weight: bold;
+    }
   </style>
 </head>
 
@@ -117,6 +171,7 @@
 
   <div class="container">
 
+    <!-- สแกนบาร์โค้ด -->
     <div class="card">
 
       <label>บาร์โค้ดสินค้า</label>
@@ -127,12 +182,21 @@
         placeholder="สแกนหรือกรอกบาร์โค้ด"
       >
 
-      <button class="scan-btn" onclick="scanBarcode()">
-        📷 สแกนบาร์โค้ด
+      <button
+        class="scan-btn"
+        onclick="openScanner()"
+      >
+        📷 สแกนบาร์โค้ดด้วยกล้อง
       </button>
+
+      <div
+        id="scanResult"
+        class="result"
+      ></div>
 
     </div>
 
+    <!-- รายการสินค้า -->
     <div class="card">
 
       <label>ชื่อสินค้า</label>
@@ -155,25 +219,45 @@
       <label>ประเภทการทำรายการ</label>
 
       <select id="type">
-        <option value="withdraw">เบิกจ่าย</option>
-        <option value="receive">รับเข้า</option>
+
+        <option value="withdraw">
+          เบิกจ่าย
+        </option>
+
+        <option value="receive">
+          รับเข้า
+        </option>
+
       </select>
 
-      <button class="withdraw-btn" onclick="saveTransaction()">
+      <button
+        class="withdraw-btn"
+        onclick="saveTransaction()"
+      >
         ➖ บันทึกเบิกจ่าย
       </button>
 
-      <button class="receive-btn" onclick="receiveProduct()">
+      <button
+        class="receive-btn"
+        onclick="receiveProduct()"
+      >
         ➕ บันทึกรับเข้า
       </button>
 
     </div>
 
+    <!-- สต๊อก -->
     <div class="card">
 
       <div class="stock">
-        📊 สินค้าคงเหลือ<br>
-        <span id="stock">0</span> ชิ้น
+
+        📊 สินค้าคงเหลือ
+
+        <br>
+
+        <span id="stock">0</span>
+        ชิ้น
+
       </div>
 
     </div>
@@ -185,65 +269,243 @@
   </div>
 
 
+  <!-- หน้าต่างกล้อง -->
+  <div
+    id="scannerModal"
+    class="scanner-modal"
+  >
+
+    <div class="scanner-box">
+
+      <div class="scanner-title">
+        📷 สแกนบาร์โค้ด
+      </div>
+
+      <div id="reader"></div>
+
+      <button
+        class="close-btn"
+        onclick="closeScanner()"
+      >
+        ✖ ปิดกล้อง
+      </button>
+
+    </div>
+
+  </div>
+
+
   <script>
 
-    function scanBarcode() {
+    let html5QrCode = null;
 
-      alert(
-        "ขั้นตอนถัดไปเราจะเพิ่มระบบเปิดกล้องมือถือเพื่อสแกนบาร์โค้ดตรงนี้ครับ 📷"
-      );
+
+    // เปิดกล้อง
+    function openScanner() {
+
+      document.getElementById(
+        "scannerModal"
+      ).style.display = "block";
+
+      html5QrCode =
+        new Html5Qrcode("reader");
+
+      Html5Qrcode.getCameras()
+        .then(devices => {
+
+          if (!devices || devices.length === 0) {
+
+            alert(
+              "ไม่พบกล้องในอุปกรณ์"
+            );
+
+            closeScanner();
+
+            return;
+          }
+
+
+          // เลือกกล้องหลังเป็นหลัก
+          let cameraId =
+            devices[devices.length - 1].id;
+
+
+          html5QrCode.start(
+
+            cameraId,
+
+            {
+              fps: 10,
+
+              qrbox: {
+                width: 280,
+                height: 160
+              }
+
+            },
+
+            (decodedText) => {
+
+              // ใส่เลขบาร์โค้ด
+              document.getElementById(
+                "barcode"
+              ).value = decodedText;
+
+
+              document.getElementById(
+                "scanResult"
+              ).innerText =
+                "สแกนสำเร็จ: " + decodedText;
+
+
+              document.getElementById(
+                "scanResult"
+              ).style.display = "block";
+
+
+              // ปิดกล้อง
+              closeScanner();
+
+            },
+
+            (errorMessage) => {
+
+              // ไม่ต้องแสดง error ทุกเฟรม
+            }
+
+          ).catch(err => {
+
+            alert(
+              "ไม่สามารถเปิดกล้องได้ กรุณาอนุญาตการใช้กล้อง"
+            );
+
+            closeScanner();
+
+          });
+
+        })
+
+        .catch(err => {
+
+          alert(
+            "ไม่สามารถเข้าถึงกล้องได้ กรุณาอนุญาตการใช้กล้อง"
+          );
+
+          closeScanner();
+
+        });
 
     }
 
 
+    // ปิดกล้อง
+    function closeScanner() {
+
+      if (html5QrCode) {
+
+        html5QrCode.stop()
+          .then(() => {
+
+            html5QrCode.clear();
+
+            html5QrCode = null;
+
+          })
+          .catch(() => {
+
+            html5QrCode = null;
+
+          });
+
+      }
+
+      document.getElementById(
+        "scannerModal"
+      ).style.display = "none";
+
+    }
+
+
+    // เบิกจ่าย
     function saveTransaction() {
 
       const barcode =
-        document.getElementById("barcode").value;
+        document.getElementById(
+          "barcode"
+        ).value;
 
       const product =
-        document.getElementById("product").value;
+        document.getElementById(
+          "product"
+        ).value;
 
       const quantity =
-        document.getElementById("quantity").value;
+        document.getElementById(
+          "quantity"
+        ).value;
 
-      if (!barcode || !product || !quantity) {
 
-        alert("กรุณากรอกข้อมูลให้ครบ");
+      if (
+        !barcode ||
+        !product ||
+        !quantity
+      ) {
+
+        alert(
+          "กรุณากรอกข้อมูลให้ครบ"
+        );
 
         return;
       }
 
+
       alert(
         "บันทึกการเบิกจ่ายแล้ว\n\n" +
-        "สินค้า: " + product +
+        "บาร์โค้ด: " + barcode +
+        "\nสินค้า: " + product +
         "\nจำนวน: " + quantity
       );
 
     }
 
 
+    // รับเข้า
     function receiveProduct() {
 
       const barcode =
-        document.getElementById("barcode").value;
+        document.getElementById(
+          "barcode"
+        ).value;
 
       const product =
-        document.getElementById("product").value;
+        document.getElementById(
+          "product"
+        ).value;
 
       const quantity =
-        document.getElementById("quantity").value;
+        document.getElementById(
+          "quantity"
+        ).value;
 
-      if (!barcode || !product || !quantity) {
 
-        alert("กรุณากรอกข้อมูลให้ครบ");
+      if (
+        !barcode ||
+        !product ||
+        !quantity
+      ) {
+
+        alert(
+          "กรุณากรอกข้อมูลให้ครบ"
+        );
 
         return;
       }
 
+
       alert(
         "บันทึกรับเข้าแล้ว\n\n" +
-        "สินค้า: " + product +
+        "บาร์โค้ด: " + barcode +
+        "\nสินค้า: " + product +
         "\nจำนวน: " + quantity
       );
 
