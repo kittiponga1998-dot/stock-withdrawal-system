@@ -827,67 +827,129 @@ async function loadProduct(barcode) {
    รับเข้า / เบิกจ่าย
 ========================================= */
 
-function saveTransaction(type) {
+async function saveTransaction(type) {
+
+  const API_URL =
+    "https://script.google.com/macros/s/AKfycbwOWdXuJ-PFTD_mDumKtlXAB-2g6tX29uqqa9uSCZmTCe0sVs4rjAPWMQkg4tdKpoTp-g/exec";
 
   const barcode =
-    document
-      .getElementById("barcode")
-      .value
-      .trim();
-
-
-  const name =
-    document
-      .getElementById("productName")
-      .value
-      .trim();
-
+    document.getElementById("barcode").value.trim();
 
   const quantity =
     parseInt(
-      document
-        .getElementById("quantity")
-        .value
+      document.getElementById("quantity").value
     );
 
-
   if (!barcode) {
-
     showMessage(
       "กรุณาสแกนบาร์โค้ด",
       "error"
     );
-
     return;
-
   }
 
-
-  if (!name) {
-
-    showMessage(
-      "กรุณากรอกชื่อสินค้า",
-      "error"
-    );
-
-    return;
-
-  }
-
-
-  if (
-    !quantity ||
-    quantity <= 0
-  ) {
-
+  if (!quantity || quantity <= 0) {
     showMessage(
       "กรุณากรอกจำนวน",
       "error"
     );
-
     return;
+  }
+
+  // ป้องกันกดซ้ำระหว่างกำลังบันทึก
+  const buttons =
+    document.querySelectorAll(
+      ".withdraw-btn, .receive-btn"
+    );
+
+  buttons.forEach(button => {
+    button.disabled = true;
+  });
+
+  showMessage(
+    "⏳ กำลังบันทึกข้อมูล...",
+    "success"
+  );
+
+  try {
+
+    const action =
+      type === "withdraw"
+        ? "withdraw"
+        : "receive";
+
+    const url =
+      API_URL +
+      "?action=" +
+      encodeURIComponent(action) +
+      "&barcode=" +
+      encodeURIComponent(barcode) +
+      "&quantity=" +
+      encodeURIComponent(quantity) +
+      "&user=" +
+      encodeURIComponent("เว็บพัสดุ");
+
+    const response =
+      await fetch(url);
+
+    const data =
+      await response.json();
+
+    if (!data.success) {
+
+      showMessage(
+        "❌ " + data.message,
+        "error"
+      );
+
+      return;
+    }
+
+    // อัปเดตชื่อสินค้า
+    document
+      .getElementById("productName")
+      .value = data.name;
+
+    // อัปเดตจำนวนคงเหลือ
+    document
+      .getElementById("currentStock")
+      .innerText = data.stock;
+
+    // แจ้งผล
+    showMessage(
+      type === "withdraw"
+        ? "✅ เบิกจ่ายสำเร็จ เหลือ " +
+          data.stock +
+          " " +
+          data.unit
+        : "✅ รับเข้าสำเร็จ มี " +
+          data.stock +
+          " " +
+          data.unit,
+      "success"
+    );
+
+    // โหลดข้อมูลล่าสุดจาก Google Sheet
+    await loadProduct(barcode);
+
+  } catch (error) {
+
+    console.error(error);
+
+    showMessage(
+      "❌ ไม่สามารถเชื่อมต่อ Google Sheet ได้",
+      "error"
+    );
+
+  } finally {
+
+    buttons.forEach(button => {
+      button.disabled = false;
+    });
 
   }
+
+}
 
 
   /*
