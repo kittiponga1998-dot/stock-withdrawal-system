@@ -10,7 +10,7 @@
 
 <style>
 * {
-  box-sizing: border-box;
+  box-sizing: border-box;https://github.com/kittiponga1998-dot/stock-withdrawal-system/tree/main
 }
 
 body {
@@ -755,7 +755,6 @@ async function stopScanner() {
 /* =========================================
    โหลดสินค้า
 ========================================= */
-
 async function loadProduct(barcode) {
 
   const API_URL =
@@ -785,7 +784,7 @@ async function loadProduct(barcode) {
       productName.value = data.name;
 
       currentStock.innerText =
-        data.stock;
+        data.stock + " " + data.unit;
 
       showMessage(
         "✅ พบสินค้า: " + data.name,
@@ -799,7 +798,7 @@ async function loadProduct(barcode) {
       currentStock.innerText = "0";
 
       showMessage(
-        "❌ ไม่พบ Barcode นี้ในระบบ",
+        "❌ " + data.message,
         "error"
       );
 
@@ -814,14 +813,13 @@ async function loadProduct(barcode) {
     currentStock.innerText = "0";
 
     showMessage(
-      "❌ ไม่สามารถเชื่อมต่อฐานข้อมูลได้",
+      "❌ ไม่สามารถเชื่อมต่อ Google Sheets ได้",
       "error"
     );
 
   }
 
 }
-
 
 /* =========================================
    รับเข้า / เบิกจ่าย
