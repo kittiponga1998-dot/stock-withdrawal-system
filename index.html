@@ -756,36 +756,67 @@ async function stopScanner() {
    โหลดสินค้า
 ========================================= */
 
-function loadProduct(barcode) {
+async function loadProduct(barcode) {
 
-  const item =
-    stockData[barcode];
+  const API_URL =
+    "https://script.google.com/macros/s/AKfycbwOWdXuJ-PFTD_mDumKtlXAB-2g6tX29uqqa9uSCZmTCe0sVs4rjAPWMQkg4tdKpoTp-g/exec";
 
+  const productName =
+    document.getElementById("productName");
 
-  if (item) {
+  const currentStock =
+    document.getElementById("currentStock");
 
-    document
-      .getElementById("productName")
-      .value =
-        item.name;
+  productName.value = "กำลังค้นหาสินค้า...";
+  currentStock.innerText = "...";
 
+  try {
 
-    document
-      .getElementById("currentStock")
-      .innerText =
-        item.stock;
+    const response = await fetch(
+      API_URL +
+      "?barcode=" +
+      encodeURIComponent(barcode)
+    );
 
-  } else {
+    const data = await response.json();
 
-    document
-      .getElementById("productName")
-      .value =
-        "";
+    if (data.success) {
 
-    document
-      .getElementById("currentStock")
-      .innerText =
-        "0";
+      productName.value = data.name;
+
+      currentStock.innerText =
+        data.stock;
+
+      showMessage(
+        "✅ พบสินค้า: " + data.name,
+        "success"
+      );
+
+    } else {
+
+      productName.value = "";
+
+      currentStock.innerText = "0";
+
+      showMessage(
+        "❌ ไม่พบ Barcode นี้ในระบบ",
+        "error"
+      );
+
+    }
+
+  } catch (error) {
+
+    console.error(error);
+
+    productName.value = "";
+
+    currentStock.innerText = "0";
+
+    showMessage(
+      "❌ ไม่สามารถเชื่อมต่อฐานข้อมูลได้",
+      "error"
+    );
 
   }
 
