@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#087f5b">
+<title>ระบบเบิกจ่ายพัสดุ | ฟาร์มไทรทอง</title>
+<script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+<style>
+:root{
+  --green:#087f5b;--green2:#16a36a;--green3:#36b878;--dark:#064b3a;
+  --mint:#eaf8f1;--bg:#f4faf7;--text:#14332b;--muted:#71858d;
+  --line:#dce7e3;--red:#ef3340;--red2:#ff5b63;--white:#fff;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;color:var(--text);
+  font-family:system-ui,-apple-system,"Segoe UI",Tahoma,Arial,sans-serif;
+  background:
+    radial-gradient(circle at 10% 30%,rgba(61,190,142,.08),transparent 28%),
+    linear-gradient(180deg,#f7fcfa 0,#eef8f4 55%,#f8fbfa 100%);
+}
+body:before{
+  content:"";position:fixed;left:0;right:0;top:0;height:170px;z-index:-1;
+  background:
+    linear-gradient(180deg,rgba(255,255,255,.95),rgba(232,248,241,.55)),
+    radial-gradient(ellipse at 20% 90%,#d8f0e5 0 12%,transparent 13%),
+    radial-gradient(ellipse at 55% 90%,#dff4ea 0 10%,transparent 11%);
+}
+.app{width:min(100%,1080px);margin:auto;padding:0 22px 35px}
+.header{
+  min-height:140px;display:flex;align-items:center;justify-content:space-between;
+  gap:25px;padding:18px 4px 15px;
+}
+.brand{display:flex;align-items:center;gap:16px}
+.farm-icon{
+  width:122px;height:88px;position:relative;display:grid;place-items:center;
+  color:#fff;font-size:45px;
+}
+.farm-icon .house{font-size:75px;filter:drop-shadow(0 4px 2px rgba(0,0,0,.08))}
+.brand-title{font-size:31px;line-height:1.05;font-weight:900;letter-spacing:-1px}
+.brand-title span{display:block;color:#159b5f}
+.brand-en{font-size:16px;color:#315967;margin-top:7px;letter-spacing:.2px}
+.sustain{
+  display:flex;align-items:center;gap:10px;padding:13px 20px;border-radius:18px;
+  background:linear-gradient(135deg,#edf9f3,#dff4eb);color:#075e47;font-weight:750;
+  box-shadow:0 7px 24px rgba(19,112,79,.08);font-size:16px;
+}
+.sustain .leaf{font-size:30px}
+.scan-banner{
+  min-height:185px;border-radius:27px;padding:28px 34px;display:flex;align-items:center;
+  background:linear-gradient(110deg,#2da95e 0%,#07946a 52%,#087f78 100%);
+  color:#fff;box-shadow:0 16px 35px rgba(7,127,91,.18);cursor:pointer;
+}
+.scan-icon{
+  width:125px;height:125px;border-radius:50%;background:rgba(255,255,255,.13);
+  display:grid;place-items:center;margin-right:38px;font-size:64px;
+}
+.scan-title{font-size:38px;font-weight:900;line-height:1}
+.scan-sub{font-size:20px;margin-top:12px;opacity:.96}
+.chevron{margin-left:auto;font-size:52px;font-weight:200}
+.section-label{
+  display:flex;align-items:center;gap:20px;justify-content:center;margin:20px 5px 12px;
+  font-size:20px;font-weight:800;color:#063e36;
+}
+.section-label:before,.section-label:after{content:"";height:2px;background:#dce8e3;flex:1}
+.search{display:flex;background:#fff;border:2px solid #d9e4e1;border-radius:17px;overflow:hidden;box-shadow:0 5px 18px rgba(25,75,63,.04)}
+.search input{border:0;outline:0;flex:1;padding:17px 20px;font-size:19px;min-width:0;color:var(--text)}
+.search input::placeholder{color:#94a4b0}
+.search button{width:95px;border:0;background:linear-gradient(135deg,#169b5f,#087f5b);color:#fff;font-size:31px;cursor:pointer}
+.reader{display:none;margin-top:14px;background:#101414;border-radius:18px;overflow:hidden}
+.reader.open{display:block}
+.reader-head{color:#fff;padding:10px 14px;display:flex;justify-content:space-between;align-items:center}
+.close{border:0;border-radius:9px;padding:7px 12px;background:#333;color:#fff}
+.product{
+  margin-top:18px;padding:25px;border-radius:25px;background:#fff;
+  display:grid;grid-template-columns:150px 1fr 310px;gap:25px;align-items:center;
+  box-shadow:0 8px 28px rgba(21,88,70,.07);border:1px solid #e8efec;
+}
+.product-image{
+  width:135px;height:135px;border-radius:20px;background:#eef3f4;display:grid;place-items:center;
+  color:#c3ced2;font-size:62px;
+}
+.product-title{font-size:28px;color:#11955a;font-weight:850;margin-bottom:10px}
+.product-name{font-size:25px;font-weight:850}
+.barcode{color:#6e818c;margin-top:18px;font-size:16px}
+.stock-box{background:#f1f5f8;border-radius:20px;padding:20px 22px}
+.stock-caption{font-size:18px;color:#657782}
+.stock-status{display:flex;align-items:center;gap:9px;font-size:17px;margin:5px 0 15px}
+.status-dot{width:19px;height:19px;border-radius:50%;background:#a8b4bb}
+.stock-label{font-size:18px;color:#657782}
+.stock-row{display:flex;justify-content:space-between;align-items:end}
+.stock-number{font-size:34px;font-weight:900}
+.stock-unit{font-size:20px}
+.controls{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:18px}
+.control{background:#fff;border:1px solid #e4ece9;border-radius:22px;padding:17px 20px;box-shadow:0 7px 25px rgba(21,88,70,.055)}
+.control h3{margin:0 0 12px;font-size:22px}
+.qty{display:grid;grid-template-columns:65px 1fr 65px;gap:12px}
+.qty button{
+  border:0;border-radius:14px;background:linear-gradient(135deg,#39b978,#159d61);
+  color:#fff;font-size:32px;cursor:pointer
+}
+.qty input,.user-select,.note textarea{
+  width:100%;border:2px solid #dbe6e2;border-radius:14px;padding:13px 15px;
+  font:inherit;outline:0;background:#fff
+}
+.qty input{text-align:center;font-size:22px;font-weight:800}
+.user-select{font-size:18px;color:#6e8190}
+.note{margin-top:18px;background:#fff;border:1px solid #e4ece9;border-radius:22px;padding:17px 20px;box-shadow:0 7px 25px rgba(21,88,70,.055)}
+.note h3{margin:0 0 10px;font-size:22px}
+.note textarea{resize:vertical;min-height:88px;font-size:17px}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-top:18px}
+.action{
+  min-height:112px;border:0;border-radius:22px;color:#fff;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:22px;text-align:left;
+  box-shadow:0 13px 28px rgba(0,0,0,.10)
+}
+.action .ico{width:58px;height:58px;border-radius:50%;background:#fff;display:grid;place-items:center;font-size:31px}
+.action strong{font-size:31px;display:block}
+.action small{font-size:16px;display:block;margin-top:4px}
+.withdraw{background:linear-gradient(135deg,#ff6268,#e91f34)}
+.receive{background:linear-gradient(135deg,#31bd72,#099557)}
+.message{display:none;margin-top:15px;padding:14px 16px;border-radius:14px;font-weight:750}
+.message.show{display:block}.ok{background:#dcfce7;color:#166534}.err{background:#fee2e2;color:#991b1b}
+.footer{padding:25px 0 5px;text-align:center;color:#71858d;font-size:15px}
+.footer strong{color:#2a735d}
+.hidden{display:none!important}
+@media(max-width:800px){
+ .app{padding:0 12px 25px}.header{min-height:105px;padding:13px 3px}
+ .farm-icon{width:70px;height:60px}.farm-icon .house{font-size:48px}
+ .brand-title{font-size:22px}.brand-en{font-size:12px}.sustain{display:none}
+ .scan-banner{min-height:135px;padding:20px;border-radius:21px}
+ .scan-icon{width:90px;height:90px;margin-right:20px;font-size:45px}
+ .scan-title{font-size:28px}.scan-sub{font-size:15px}.chevron{font-size:38px}
+ .section-label{font-size:17px;margin-top:15px}.search input{font-size:16px;padding:14px}.search button{width:64px;font-size:25px}
+ .product{grid-template-columns:82px 1fr;padding:17px;gap:14px;border-radius:20px}
+ .product-image{width:82px;height:82px;font-size:40px;border-radius:15px;grid-row:1 / span 2}
+ .product-title{font-size:21px}.product-name{font-size:19px}.barcode{font-size:12px;margin-top:10px}
+ .stock-box{grid-column:1 / -1;padding:15px}.stock-caption,.stock-label{font-size:14px}.stock-number{font-size:29px}.stock-unit{font-size:16px}
+ .controls{grid-template-columns:1fr;gap:12px}.control,.note{padding:15px;border-radius:18px}
+ .control h3,.note h3{font-size:19px}.actions{gap:10px}.action{min-height:91px;border-radius:18px;gap:10px}.action .ico{width:47px;height:47px;font-size:25px}.action strong{font-size:22px}.action small{font-size:12px}
+ .footer{font-size:12px}
+}
+</style>
+</head>
+<body>
+<div class="app">
+<header class="header">
+  <div class="brand">
+    <div class="farm-icon"><div class="house">🏠</div></div>
+    <div>
+      <div class="brand-title">ระบบเบิกจ่ายพัสดุ<span>ฟาร์มไทรทอง</span></div>
+      <div class="brand-en">Stock Withdrawal System</div>
+    </div>
+  </div>
+  <div class="sustain"><span class="leaf">🌿</span><span>ร่วมดูแลทรัพยากร<br>เพื่อฟาร์มที่ยั่งยืน</span></div>
+</header>
+
+<section class="scan-banner" onclick="startScanner()">
+  <div class="scan-icon">📷</div>
+  <div><div class="scan-title">สแกน Barcode</div><div class="scan-sub">แตะเพื่อเปิดกล้องสแกนบาร์โค้ด</div></div>
+  <div class="chevron">›</div>
+</section>
+
+<div class="section-label">หรือกรอก Barcode</div>
+<div class="search">
+  <input id="barcode" inputmode="numeric" autocomplete="off" placeholder="กรอกหรือสแกน Barcode ที่นี่"
+         onkeydown="if(event.key==='Enter')lookupProduct()">
+  <button onclick="lookupProduct()">⌕</button>
+</div>
+
+<div id="readerWrap" class="reader">
+  <div class="reader-head"><span>เล็งกล้องไปที่ Barcode</span><button class="close" onclick="stopScanner()">ปิด</button></div>
+  <div id="reader"></div>
+</div>
+
+<section id="product" class="product">
+  <div class="product-image">📦</div>
+  <div>
+    <div class="product-title">สินค้า</div>
+    <div id="productName" class="product-name">-</div>
+    <div id="productBarcode" class="barcode">รหัสสินค้า: -</div>
+  </div>
+  <div class="stock-box">
+    <div class="stock-caption">สถานะสต๊อก</div>
+    <div class="stock-status"><span id="statusDot" class="status-dot"></span><span id="stockStatus">-</span></div>
+    <div class="stock-label">คงเหลือ</div>
+    <div class="stock-row"><span id="stock" class="stock-number">-</span><span id="unit" class="stock-unit">หน่วย</span></div>
+  </div>
+</section>
+
+<section class="controls">
+  <div class="control">
+    <h3>📦 จำนวน</h3>
+    <div class="qty">
+      <button onclick="changeQty(-1)">−</button>
+      <input id="qty" type="number" min="1" value="1">
+      <button onclick="changeQty(1)">+</button>
+    </div>
+  </div>
+  <div class="control">
+    <h3>👤 ผู้เบิก</h3>
+    <select id="user" class="user-select">
+      <option value="">เลือกผู้เบิก</option>
+      <option>พงษ์พัฒน์</option><option>กิตติพงศ์</option><option>วรนุช</option><option>กฤตนัย</option>
+      <option>ปรีชา บัว</option><option>นกเล็ก</option><option>สมหมาย</option><option>วาสนา</option>
+      <option>สมใจ</option><option>สมบัติ</option><option>รุ่งอรุณ</option><option>ปรีชา กลิ่น</option>
+      <option>ลำจวน</option><option>ศรีสุดา</option><option>ปิยพัชร์</option><option>นิตยา</option>
+      <option>มีนา</option><option>สหชัย</option><option>ลินดา</option><option>สุวิทย์</option>
+      <option>จารุภัทร</option><option>พีรพัฒน์</option><option>สกุณา</option><option>สรณ์สิริ</option>
+    </select>
+  </div>
+</section>
+
+<section class="note">
+  <h3>📝 หมายเหตุ <span style="font-weight:500;color:#71858d">(ถ้ามี)</span></h3>
+  <textarea id="note" placeholder="ระบุหมายเหตุ..."></textarea>
+</section>
+
+<section class="actions">
+  <button class="action withdraw" onclick="submitTransaction('withdraw')">
+    <span class="ico">↓</span><span><strong>เบิกจ่าย</strong><small>ลดจำนวนในสต๊อก</small></span>
+  </button>
+  <button class="action receive" onclick="submitTransaction('receive')">
+    <span class="ico">↑</span><span><strong>รับเข้า</strong><small>เพิ่มจำนวนในสต๊อก</small></span>
+  </button>
+</section>
+
+<div id="message" class="message"></div>
+
+<footer class="footer">🌿 <strong>ฟาร์มไทรทอง</strong>　|　ใช้งานง่าย สะดวก รวดเร็ว เพื่อการทำงานที่ดีขึ้น　　v1.0.0</footer>
+</div>
+
+<script>
+const API_URL = "https://script.google.com/macros/s/AKfycbwOWdXuJ-PFTD_mDumKtlXAB-2g6tX29uqqa9uSCZmTCe0sVs4rjAPWMQkg4tdKpoTp-g/exec";
+let currentProduct=null, scanner=null;
+
+async function api(action, params={}){
+  const q=new URLSearchParams({action,...params});
+  try{
+    const r=await fetch(API_URL+"?"+q.toString(),{method:"GET"});
+    return await r.json();
+  }catch(e){
+    return {success:false,message:"เชื่อมต่อระบบไม่ได้ กรุณาลองใหม่"};
+  }
+}
+function showMessage(text,type){
+  const e=document.getElementById("message");
+  e.textContent=text;e.className="message show "+(type||"");
+}
+function changeQty(delta){
+  const e=document.getElementById("qty");
+  e.value=Math.max(1,(parseInt(e.value)||1)+delta);
+}
+function renderProduct(p){
+  currentProduct=p;
+  document.getElementById("productName").textContent=p.name||"-";
+  document.getElementById("productBarcode").textContent="รหัสสินค้า: "+(p.barcode||"-");
+  document.getElementById("stock").textContent=Number(p.stock)||0;
+  document.getElementById("unit").textContent=p.unit||"หน่วย";
+  document.getElementById("qty").value=1;
+  const s=Number(p.stock)||0,r=Number(p.reorderPoint)||0;
+  const dot=document.getElementById("statusDot"),st=document.getElementById("stockStatus");
+  if(s<=0){st.textContent="หมด";dot.style.background="#ef3340"}
+  else if(s<=r){st.textContent="ใกล้สั่งซื้อ";dot.style.background="#f59e0b"}
+  else{st.textContent="ปกติ";dot.style.background="#31b86f"}
+  document.getElementById("product").scrollIntoView({behavior:"smooth",block:"center"});
+}
+async function lookupProduct(){
+  const code=document.getElementById("barcode").value.trim();
+  if(!code){showMessage("กรุณากรอกหรือสแกน Barcode","err");return}
+  const d=await api("lookup",{barcode:code});
+  if(d.success){
+    const p=d.product||d;
+    renderProduct(p);
+    showMessage("พบสินค้า: "+(p.name||"-"),"ok");
+  }else showMessage(d.message||"ไม่พบ Barcode นี้ในระบบ","err");
+}
+async function submitTransaction(type){
+  if(!currentProduct){showMessage("กรุณาสแกนหรือค้นหาสินค้าก่อน","err");return}
+  const qty=Math.max(1,parseInt(document.getElementById("qty").value)||0);
+  const user=document.getElementById("user").value;
+  const note=document.getElementById("note").value.trim();
+  if(!user){showMessage("กรุณาเลือกผู้เบิก","err");return}
+  if(type==="withdraw" && qty>Number(currentProduct.stock||0)){
+    showMessage("จำนวนเบิกมากกว่าสต๊อกที่มี","err");return
+  }
+  const d=await api(type,{barcode:currentProduct.barcode,quantity:qty,user,note});
+  if(d.success){
+    currentProduct.stock=Number(d.stock);
+    renderProduct(currentProduct);
+    showMessage((type==="withdraw"?"✅ เบิกจ่ายสำเร็จ":"✅ รับเข้าสำเร็จ")+" · คงเหลือ "+currentProduct.stock+" "+(currentProduct.unit||"หน่วย"),"ok");
+    document.getElementById("note").value="";
+  }else showMessage(d.message||"บันทึกรายการไม่สำเร็จ","err");
+}
+async function startScanner(){
+  const wrap=document.getElementById("readerWrap");
+  wrap.classList.add("open");
+  try{
+    scanner=new Html5Qrcode("reader");
+    await scanner.start({facingMode:"environment"},{fps:10,qrbox:{width:280,height:120}},
+      code=>{
+        document.getElementById("barcode").value=code;
+        stopScanner();
+        lookupProduct();
+      },()=>{});
+  }catch(e){
+    showMessage("เปิดกล้องไม่ได้ กรุณาอนุญาตการใช้กล้อง หรือกรอก Barcode เอง","err");
+    stopScanner();
+  }
+}
+async function stopScanner(){
+  try{if(scanner){await scanner.stop();await scanner.clear()}}catch(e){}
+  scanner=null;document.getElementById("readerWrap").classList.remove("open");
+}
+</script>
+</body>
+</html>
